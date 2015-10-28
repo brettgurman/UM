@@ -1,0 +1,150 @@
+********************************************************************************
+*                                                                              *
+*       Universal Machine - Design Document                                    *
+*       Authors: Brett Gurman and Margaret Feltz                               *
+*       Created on Monday, November 3 2014                                     *
+*                                                                              *
+********************************************************************************
+
+Architecture
+________________________________________________________________________________
+Our Universal Machine consists of four distinct components:
+        - Eight general-purpose registers, each of which holds a single, 32-bit
+          word
+
+        - An adress space that is divided into a collection of memory segments,
+          each of which contains a sequence of words and is identified by a 
+          distinct 32-bit identifier
+
+        - An I/O device capable of displaying characters and performing input 
+          and output of unsigned 8-bit characters
+
+        - A 32 bit program counter
+
+The address space is the most interesting component. We have chosen to use a
+Hanson Table to represent this component. The elements of this Table
+(which will henceforth be refered to as $m) will be Hanson Sequences, 
+each of which represents a single segment of memory. The elements of those
+ Sequences will be 32-bit words.
+
+The '0' segment, or the sequence at $m[0], is of particular significance; this
+segment contains the words of the program, each of which is a UM instruction. 
+
+The architecture of our Universal Machine is as follows:
+        - Initially, the $m[0] segment contains the words of the program, and
+          all other segments are unmapped. All registers are zero, and the 
+          program counter points to $m[0][0], i.e., the first word of the
+          program.
+        - The execution of the program proceeds in steps called "Execution
+          cycles." For each cycle, the 32-bit instruction at the index equal to
+          the program counter within $m[0] is retreived. The program counter is
+          advanced to the next word, if one exists, and the retrieved
+          instruction is executed. 
+
+In order to store data in memory, the user maps a segment for the data, loads
+the data into a register, and then stores the register contents into the mapped
+segment. When the user no longer needs data contained within a particular
+mapped segment, the segment is unmapped, and may be reused for other data. The
+reusable IDs are kept track of by placing any ID that has been unmapped into a 
+sequence of all reusable IDs.
+
+Data may live in registers or in segments in memory (or both). When the user
+wishes to manipulate data using the arithmetic instructions, that data is
+loaded from the segment in memory in which it lives into a register, after
+which the arithmetic instruction may be executed.
+-------------------------------------------------------------------------------
+
+interfaces              NOTE: see header files for documentation
+________________________________________________________________________________
+Our Universal Machine will be separated into the following interfaces:
+
+- um
+        This is the client interface. This interface will call functions from
+        other interfaces to get instructions and decode and execute them. This
+        interface will be extremely minimal, relying almost entirely on other
+        interfaces to do all of the heavy lifting.
+
+- instrseq
+        The instrsequence interface will get instructions from $m[0] and call
+        functions from other interfaces to decode and execute them.
+
+- decodeinstr
+        The decodeinstr interface will decode instructions from $m[0] and call
+        functions from other interfaces to execute the instructions
+
+        - typedef uint32_t Um_instruction
+                Um instructions are represented as uint32_t
+        - typedef short Um_opcode
+                Um opcodes are represented as short ints
+
+- umio
+        The umio interface will be used to execute input and output
+        instructions.
+
+- map
+        The map interface will be used to execute mapped and unmap
+        instructions.
+
+- move
+        The move interface will be used to execute conditional move, 
+        segmented load/store, load program and load value.
+
+- arith
+        The arith interface will be used to execute addition, multiplication,
+        division, and bitwise NAND.
+
+- halt
+        The halt interface will be used to execute halt.
+
+- segments
+        The segments interface is used to manage maping and unmaping of segments
+
+        segment_unit_test is an additional module whose purpose is to unit test
+        the segments module
+
+
+
+Implementations             
+________________________________________________________________________________
+No actual code to document yet. Interface files contain extensive documentation
+
+
+Full UM Checklist
+________________________________________________________________________________
+1. We are trying to emulate a Universal Machine with a specific 14 instruction 
+   instruction set.
+11.
+   see "Interface" and "Architecture" section, as well as header files, for 
+   full descriptions of the major components of the program. 
+12.
+   see "Interface" and "Architecture" section, as well as header files, for 
+   full descriptions of the architecture of the program. 
+13.
+   In order to convince ourselves that our program works, we will extensively
+   unit test each individual component, as well as testing all the parts
+   together. Unit tests for the segments interface are included as part of the
+   design document.
+
+
+UM Segments checklist
+________________________________________________________________________________
+1. The abstract thing we are trying to represent is an address space divided
+   into a set ever changing segments, which can be either mapped or unmapped and
+   themselves consist of 32-bit words.
+2.
+   See segments.h interface for extensive function documentation.
+3.
+   See the segments_unit_tests module for extensive unit testing of the 
+   segments module
+4.
+   The address space is represented as a Table of segments; segments themselves
+   are represented as sequences of words, which are represented as uint32_t.
+
+   Additional structures are stored in the UM_address_space struct, namely, a
+   sequence of reusable IDs, and an ID counter. Also, all UM_segments keep track
+   of their segment ID and the segment's words.
+5. 
+   Invariants:
+        No ID that is in the reusable_IDs sequence will correspond to a mapped
+        segment.
+

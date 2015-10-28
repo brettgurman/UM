@@ -1,0 +1,42 @@
+Brett Gurman and Margaret Feltz
+
+Class TAs
+
+All of um is correctly implemented. Our unit tests do not work because we
+failed to create an interface that correctly printed instructions.
+
+Implementation is slightly different from design, no instrseq interface, 
+instruction packing handled in main.
+
+/*----------------------------=ARCHITECTURE----------------------------------*/
+
+The key to our architecture is the abstractions responsible for the registers
+and the address space, how we represented out segments, and the method through
+ which we implemented remapping old IDs. At the top level is the UM_machine
+ struct, which contains the address space, the registers, the program counter
+ and the number of instructions in the program segment. The address space
+ contains the mapped segments, which are a sequence of segments, the list of
+ reusable IDs, which is a sequence of UM_segment_IDs, and the ID counter. The
+ registers and the segments are uarrays. 
+
+Instructions are read in at the beginning into a segment which is mapped as
+segment 0. Once all instructions are read, the program begins running in 
+individual cycles. During each cycle, the next instruction is processed and
+executed.
+
+In order to reuse IDs, we stored all IDs that are unmapped from a previously 
+mapped state in a sequence, and kept track of the first never used ID. Any time
+a segment was mapped, the reusable IDs sequence was checked; if it was 
+non-empty, the first id was used. If it was empty, the new ID was mapped as the
+first never mapped ID, and the counter was incremented.
+/*---------------------------------------------------------------------------*/
+
+Midmark, which runs 80 million instructions, takes approximately 23 seconds.
+80,000,000/23 == ~3,478,260 We run just under 3.5 million instructions per
+ second.
+
+6 hours
+
+6 hours
+
+30 hours
